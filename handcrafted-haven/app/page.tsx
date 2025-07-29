@@ -277,7 +277,7 @@ export default function Home() {
                   <span>Start Shopping Now</span>
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-                <Link href="/artisans" className="btn-secondary border-2 border-white text-white hover:bg-white hover:text-blue-600 text-lg px-10 py-4">
+                <Link href="/registration" className="btn-secondary border-2 border-white text-white hover:bg-white hover:text-blue-600 text-lg px-10 py-4">
                   Become an Artisan
                 </Link>
               </div>
