@@ -29,7 +29,7 @@ export default function Home() {
             <div className="text-center max-w-4xl mx-auto animate-fade-in-up">
               <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
                 Handcrafted Haven
-                <span className="block bg-gradient-gold bg-clip-text text-transparent">
+                <span className="block bg-gradient-gold bg-clip-text">
                   Handcrafted Treasures
                 </span>
               </h1>
@@ -114,9 +114,9 @@ export default function Home() {
               <div>
                 <div className="flex items-center mb-4">
                   <Star className="w-8 h-8 text-gold mr-3" />
-                  <h2 className="text-4xl md:text-5xl font-bold text-primary">Featured Products</h2>
+                  <h2 className="text-4xl md:text-5xl font-bold text-gold">Featured Products</h2>
                 </div>
-                <p className="text-xl text-secondary max-w-2xl">
+                <p className="text-xl text-accent max-w-2xl">
                   Handpicked by our curators, these exceptional pieces showcase the finest craftsmanship
                 </p>
               </div>
@@ -190,8 +190,8 @@ export default function Home() {
         <section className="py-20 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-primary mb-6">What Our Customers Say</h2>
-              <p className="text-xl text-secondary max-w-2xl mx-auto">
+              <h2 className="text-4xl md:text-5xl font-bold text-tertiary mb-6">What Our Customers Say</h2>
+              <p className="text-xl text-tertiary max-w-2xl mx-auto">
                 Real stories from real customers who found their perfect handcrafted treasures
               </p>
             </div>
