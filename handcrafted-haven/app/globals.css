@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   /* Modern color palette */
@@ -22,18 +20,26 @@
   --gradient-dark: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
 
 body {
   background: var(--gradient-dark);
   color: var(--text-primary);
   line-height: 1.6;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  min-height: 100vh;
 }
 
 /* Custom utility classes */
@@ -63,6 +69,10 @@ body {
 
 .text-secondary {
   color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-muted);
 }
 
 .text-muted {
@@ -386,4 +396,25 @@ body {
   background: var(--gradient-gold);
   z-index: -1;
   border-radius: inherit;
+}
+
+/* Additional utility classes for products page */
+.border-tertiary {
+  border-color: var(--border-color);
+}
+
+.hover-bg {
+  background-color: var(--hover-bg);
+}
+
+.bg-hover-bg:hover {
+  background-color: var(--hover-bg);
+}
+
+.focus\:ring-accent:focus {
+  --tw-ring-color: var(--accent-primary);
+}
+
+.bg-accent {
+  background-color: var(--accent-primary);
 }
