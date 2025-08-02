@@ -1,6 +1,6 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -24,7 +24,11 @@ export const metadata: Metadata = {
     title: 'ArtisanHub - Discover Unique Handcrafted Treasures',
     description: 'Connect with talented artisans and discover one-of-a-kind handcrafted items that tell a story.',
   },
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
   themeColor: '#3b82f6',
 }
 
@@ -38,7 +42,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#3b82f6" />
       </head>
       <body className={`${inter.className} antialiased`}>
         {children}
