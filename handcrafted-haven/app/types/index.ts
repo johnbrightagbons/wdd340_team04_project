@@ -140,3 +140,16 @@ export interface Cart {
   total: number
   itemCount: number
 }
+
+// Review type for product reviews
+export interface Review {
+  id: string
+  productId: string
+  userId: string
+  userName: string
+  rating: number
+  comment: string
+  createdAt: Date
+  helpful: number
+  verified: boolean
+}
