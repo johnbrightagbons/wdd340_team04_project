@@ -10,19 +10,19 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'ArtisanHub - Discover Unique Handcrafted Treasures',
+  title: 'ArtisanHub - Discover Unique Handcrafted Treasures.',
   description: 'Connect with talented artisans and discover one-of-a-kind handcrafted items that tell a story. Every piece is made with passion and traditional craftsmanship.',
   keywords: 'handcrafted, artisan, unique gifts, handmade, craftsmanship, pottery, jewelry, textiles, woodwork',
   authors: [{ name: 'ArtisanHub Team' }],
   openGraph: {
-    title: 'ArtisanHub - Discover Unique Handcrafted Treasures',
+    title: 'ArtisanHub - Discover Unique Handcrafted Treasures.',
     description: 'Connect with talented artisans and discover one-of-a-kind handcrafted items that tell a story.',
     type: 'website',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ArtisanHub - Discover Unique Handcrafted Treasures',
+    title: 'ArtisanHub - Discover Unique Handcrafted Treasures.',
     description: 'Connect with talented artisans and discover one-of-a-kind handcrafted items that tell a story.',
   },
 }
