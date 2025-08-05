@@ -1,4 +1,3 @@
-import Header from './components/Header'
 import Footer from './components/Footer'
 import ProductCard from './components/ProductCard'
 import CategoryCard from './components/CategoryCard'
@@ -19,7 +18,7 @@ import { featuredProducts, categories } from './data/sampleData'
 export default function Home() {
   return (
     <div className="min-h-screen">
-      <Header />
+      {/* <Header /> */}
       
       <main>
         {/* Hero Section */}
