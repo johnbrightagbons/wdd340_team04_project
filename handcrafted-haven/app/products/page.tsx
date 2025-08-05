@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { Search, Grid3X3, List, SlidersHorizontal } from 'lucide-react'
-import Header from '../components/Header'
 import ProductCard from '../components/ProductCard'
 import { featuredProducts, categories } from '../data/sampleData'
 
@@ -45,7 +44,6 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-primary">
-      <Header />
       <div className="bg-secondary border-b border-tertiary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-primary mb-2">Product Catalog</h1>
