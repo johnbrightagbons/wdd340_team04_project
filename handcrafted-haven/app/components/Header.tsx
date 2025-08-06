@@ -1,14 +1,25 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { Palette, Search, ShoppingCart, User, Menu, X } from 'lucide-react'
+import { Palette, Search, ShoppingCart, User, Menu, X, LogOut } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { useCart } from '../contexts/CartContext'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false)
+  const { user, logout } = useAuth()
+  const { cart } = useCart()
 
   const toggleMenu = (): void => {
     setIsMenuOpen(!isMenuOpen)
   }
+
+  const handleLogout = async () => {
+    await logout()
+    setIsMenuOpen(false)
+  }
+
+  const cartItemCount = cart?.itemCount || 0
 
   return (
     <header className="header">
@@ -47,25 +58,50 @@ export default function Header() {
               <button className="p-2 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary">
                 <Search className="w-5 h-5" />
               </button>
-              <button className="p-2 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary relative">
+              <Link href="/cart" className="p-2 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary relative">
                 <ShoppingCart className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 bg-accent-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  0
-                </span>
-              </button>
-              <button className="p-2 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary">
-                <User className="w-5 h-5" />
-              </button>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-accent-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartItemCount}
+                  </span>
+                )}
+              </Link>
+              {user ? (
+                <Link href="/profile" className="p-2 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary">
+                  <User className="w-5 h-5" />
+                </Link>
+              ) : (
+                <Link href="/login" className="p-2 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary">
+                  <User className="w-5 h-5" />
+                </Link>
+              )}
             </div>
 
             {/* Auth Buttons */}
             <div className="hidden md:flex items-center space-x-3">
-              <Link href="/login" className="text-secondary hover:text-primary transition-colors px-4 py-2 rounded-lg hover:bg-tertiary">
-                Login
-              </Link>
-              <Link href="/signup" className="btn-primary">
-                Sign Up
-              </Link>
+              {user ? (
+                <>
+                  <span className="text-secondary text-sm">
+                    Welcome, {user.name}
+                  </span>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-secondary hover:text-primary transition-colors px-4 py-2 rounded-lg hover:bg-tertiary flex items-center space-x-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="text-secondary hover:text-primary transition-colors px-4 py-2 rounded-lg hover:bg-tertiary">
+                    Login
+                  </Link>
+                  <Link href="/signup" className="btn-primary">
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -105,25 +141,50 @@ export default function Header() {
                 <button className="p-3 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary">
                   <Search className="w-5 h-5" />
                 </button>
-                <button className="p-3 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary relative">
+                <Link href="/cart" className="p-3 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary relative">
                   <ShoppingCart className="w-5 h-5" />
-                  <span className="absolute -top-1 -right-1 bg-accent-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    0
-                  </span>
-                </button>
-                <button className="p-3 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary">
-                  <User className="w-5 h-5" />
-                </button>
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-accent-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Link>
+                {user ? (
+                  <Link href="/profile" className="p-3 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary">
+                    <User className="w-5 h-5" />
+                  </Link>
+                ) : (
+                  <Link href="/login" className="p-3 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-tertiary">
+                    <User className="w-5 h-5" />
+                  </Link>
+                )}
               </div>
               
               {/* Mobile Auth */}
               <div className="flex flex-col space-y-3 pt-4 border-t border-custom">
-                <Link href="/login" className="btn-secondary text-center py-3">
-                  Login
-                </Link>
-                <Link href="/signup" className="btn-primary text-center py-3">
-                  Sign Up
-                </Link>
+                {user ? (
+                  <>
+                    <div className="text-center py-2 text-secondary">
+                      Welcome, {user.name}
+                    </div>
+                    <button 
+                      onClick={handleLogout}
+                      className="btn-secondary text-center py-3 flex items-center justify-center space-x-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" className="btn-secondary text-center py-3">
+                      Login
+                    </Link>
+                    <Link href="/signup" className="btn-primary text-center py-3">
+                      Sign Up
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
