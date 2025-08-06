@@ -14,7 +14,7 @@ export default function Footer() {
               <div className="bg-gradient-primary p-2 rounded-lg">
                 <Palette className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-bold text-primary">ArtisanHub</span>
+              <span className="text-2xl font-bold text-primary">Handcrafted Haven</span>
             </div>
             <p className="text-secondary mb-6 max-w-md leading-relaxed">
               Connecting talented artisans with customers who appreciate handcrafted quality and unique designs. 

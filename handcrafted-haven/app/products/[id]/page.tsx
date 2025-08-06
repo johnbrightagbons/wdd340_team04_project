@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
-import { Star, Heart, ShoppingCart, Share2, Award, Crown } from 'lucide-react'
-import Header from '../../components/Header'
-import { featuredProducts } from '../../data/sampleData'
+import { Star, Heart, ShoppingCart, Share2, Award, Crown, MessageCircle, Plus } from 'lucide-react'
+import ReviewForm from '../../components/ReviewForm'
+import ReviewList from '../../components/ReviewList'
+import { featuredProducts, sampleReviews } from '../../data/sampleData'
+import { Review } from '../../types'
 
 export default function ProductDetailPage() {
   const params = useParams()
@@ -17,6 +19,10 @@ export default function ProductDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isFavorite, setIsFavorite] = useState(false)
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviews, setReviews] = useState<Review[]>(
+    sampleReviews.filter(review => review.productId === productId)
+  )
 
   if (!product) {
     return (
@@ -40,9 +46,25 @@ export default function ProductDetailPage() {
   const isFeatured = product.featured || false
   const isOnSale = product.originalPrice && product.originalPrice > product.price
 
+  const handleReviewSubmit = (reviewData: Omit<Review, 'id' | 'createdAt' | 'helpful' | 'verified'>) => {
+    const newReview: Review = {
+      ...reviewData,
+      id: `review-${Date.now()}`,
+      createdAt: new Date(),
+      helpful: 0,
+      verified: false
+    }
+    
+    setReviews(prev => [newReview, ...prev])
+    setShowReviewForm(false)
+  }
+
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+    : product.rating || 0
+
   return (
     <div className="min-h-screen bg-primary">
-      <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="space-y-4">
@@ -105,25 +127,23 @@ export default function ProductDetailPage() {
               <p className="text-secondary">By <span className="text-accent">{product.artisan}</span></p>
             </div>
 
-            {product.rating && product.reviews && (
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={`star-${i}`} 
-                      className={`w-4 h-4 ${
-                        i < Math.floor(product.rating!) 
-                          ? 'text-yellow-400 fill-current' 
-                          : 'text-gray-300'
-                      }`} 
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-secondary">
-                  {product.rating} ({product.reviews} reviews)
-                </span>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                  <Star 
+                    key={`star-${i}`} 
+                    className={`w-4 h-4 ${
+                      i < Math.floor(averageRating) 
+                        ? 'text-yellow-400 fill-current' 
+                        : 'text-gray-300'
+                    }`} 
+                  />
+                ))}
               </div>
-            )}
+              <span className="text-sm text-secondary">
+                {averageRating.toFixed(1)} ({reviews.length} reviews)
+              </span>
+            </div>
 
             <div className="flex items-center space-x-3">
               <span className="text-3xl font-bold text-primary">${product.price}</span>
@@ -218,6 +238,32 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-16">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-primary">Customer Reviews</h2>
+            <button
+              onClick={() => setShowReviewForm(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Write a Review</span>
+            </button>
+          </div>
+
+          {showReviewForm && (
+            <div className="mb-8">
+              <ReviewForm
+                productId={productId}
+                onSubmit={handleReviewSubmit}
+                onCancel={() => setShowReviewForm(false)}
+              />
+            </div>
+          )}
+
+          <ReviewList reviews={reviews} productId={productId} />
         </div>
       </div>
     </div>

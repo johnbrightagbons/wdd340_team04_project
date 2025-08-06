@@ -1,4 +1,4 @@
-import { Product, Category } from '../types'
+import { Product, Category, Review } from '../types'
 
 export const categories: Category[] = [
   {
@@ -165,5 +165,64 @@ export const sampleArtisans = [
     verified: true,
     rating: 4.7,
     totalSales: 234
+  }
+]
+
+// Sample reviews data
+export const sampleReviews: Review[] = [
+  {
+    id: '1',
+    productId: '1',
+    userId: 'user-1',
+    userName: 'Sarah Johnson',
+    rating: 5,
+    comment: 'Absolutely beautiful! The craftsmanship is outstanding and the bowl is perfect for serving. Highly recommend!',
+    createdAt: new Date('2024-01-15'),
+    helpful: 12,
+    verified: true
+  },
+  {
+    id: '2',
+    productId: '1',
+    userId: 'user-2',
+    userName: 'Michael Chen',
+    rating: 4,
+    comment: 'Great quality and beautiful design. The size is perfect for my kitchen. Would buy again!',
+    createdAt: new Date('2024-01-10'),
+    helpful: 8,
+    verified: true
+  },
+  {
+    id: '3',
+    productId: '2',
+    userId: 'user-3',
+    userName: 'Emily Davis',
+    rating: 5,
+    comment: 'These earrings are stunning! They\'re lightweight and comfortable to wear. Perfect gift!',
+    createdAt: new Date('2024-01-20'),
+    helpful: 15,
+    verified: true
+  },
+  {
+    id: '4',
+    productId: '3',
+    userId: 'user-4',
+    userName: 'Robert Wilson',
+    rating: 4,
+    comment: 'Excellent cutting board. The wood quality is top-notch and it\'s very durable. Great purchase!',
+    createdAt: new Date('2024-01-05'),
+    helpful: 6,
+    verified: true
+  },
+  {
+    id: '5',
+    productId: '4',
+    userId: 'user-5',
+    userName: 'Lisa Thompson',
+    rating: 5,
+    comment: 'This vase is absolutely gorgeous! The colors are vibrant and it\'s become the centerpiece of my living room.',
+    createdAt: new Date('2024-01-12'),
+    helpful: 9,
+    verified: true
   }
 ]
