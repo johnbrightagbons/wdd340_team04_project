@@ -24,6 +24,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   const isPremium = product.premium || false
   const isOnSale = product.originalPrice && product.originalPrice > product.price
   
+  // Handle category and artisan data (could be string or object)
+  const categoryName = typeof product.category === 'string' ? product.category : (product.category as any)?.name || 'Unknown'
+  const artisanName = typeof product.artisan === 'string' ? product.artisan : (product.artisan as any)?.name || 'Unknown'
+  
   // Dynamic card styling
   const cardClass = isPremium 
     ? "card card-premium premium-glow" 
@@ -111,8 +115,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             
             {/* Category and Artisan */}
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">{product.category}</span>
-              <span className="text-secondary font-medium">by {product.artisan}</span>
+              <span className="text-muted">{categoryName}</span>
+              <span className="text-secondary font-medium">by {artisanName}</span>
             </div>
             
             {/* Rating (if available) */}

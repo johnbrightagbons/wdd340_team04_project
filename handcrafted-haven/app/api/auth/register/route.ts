@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import connectDB from '@/app/lib/database'
-import User from '@/app/models/User'
+import { prisma } from '@/app/lib/prisma'
 import { hashPassword, generateToken, setTokenCookie } from '@/app/lib/auth'
 
 const registerSchema = z.object({
@@ -13,13 +12,14 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
-
     const body = await request.json()
     const validatedData = registerSchema.parse(body)
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: validatedData.email })
+    const existingUser = await prisma.user.findUnique({
+      where: { email: validatedData.email }
+    })
+    
     if (existingUser) {
       return NextResponse.json(
         { success: false, message: 'User already exists' },
@@ -31,32 +31,31 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(validatedData.password)
 
     // Create user
-    const user = new User({
-      name: validatedData.name,
-      email: validatedData.email,
-      password: hashedPassword,
-      isArtisan: validatedData.isArtisan || false
+    const user = await prisma.user.create({
+      data: {
+        name: validatedData.name,
+        email: validatedData.email,
+        password: hashedPassword,
+        isArtisan: validatedData.isArtisan || false
+      }
     })
-
-    await user.save()
 
     // Generate token
     const token = generateToken({
-      userId: user._id.toString(),
+      userId: user.id,
       email: user.email,
       isArtisan: user.isArtisan
     })
 
     // Set cookie
-    setTokenCookie(token)
+    await setTokenCookie(token)
 
     // Return user data (without password)
     const userResponse = {
-      id: user._id,
+      id: user.id,
       name: user.name,
       email: user.email,
       isArtisan: user.isArtisan,
-      profileImage: user.profileImage,
       createdAt: user.createdAt
     }
 

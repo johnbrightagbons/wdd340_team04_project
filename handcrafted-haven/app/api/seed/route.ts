@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { seedDatabase } from '@/app/lib/seed'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     await seedDatabase()
     

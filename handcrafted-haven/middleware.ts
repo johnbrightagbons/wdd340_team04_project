@@ -3,48 +3,70 @@ import type { NextRequest } from 'next/server'
 import { verifyToken } from './app/lib/auth'
 
 export function middleware(request: NextRequest) {
+  // Get the pathname of the request (e.g. /, /protected)
+  const path = request.nextUrl.pathname
+
+  // Define public paths that don't require authentication
+  const isPublicPath = path === '/' || 
+                      path === '/login' || 
+                      path === '/signup' || 
+                      path === '/products' ||
+                      path.startsWith('/products/') ||
+                      path === '/cart' ||
+                      path === '/artisans' ||
+                      path.startsWith('/artisans/') ||
+                      path === '/categories' ||
+                      path.startsWith('/categories/') ||
+                      path === '/about' ||
+                      path.startsWith('/api/products') ||
+                      path.startsWith('/api/categories') ||
+                      path.startsWith('/api/artisans') ||
+                      path.startsWith('/api/seed')
+
+  // Define paths that require authentication (checkout, orders, profile, etc.)
+  const requiresAuth = path === '/checkout' ||
+                      path === '/orders' ||
+                      path === '/profile' ||
+                      path === '/my-orders' ||
+                      path.startsWith('/api/cart') ||
+                      path.startsWith('/api/orders') ||
+                      path.startsWith('/api/profile')
+
   // Get token from cookies
   const token = request.cookies.get('auth-token')?.value
 
-  // Protected routes that require authentication
-  const protectedRoutes = [
-    '/api/cart',
-    '/api/auth/me',
-    '/profile',
-    '/dashboard'
-  ]
+  // If the path is public, allow access
+  if (isPublicPath) {
+    return NextResponse.next()
+  }
 
-  // Check if the current path is a protected route
-  const isProtectedRoute = protectedRoutes.some(route => 
-    request.nextUrl.pathname.startsWith(route)
-  )
+  // If the path requires authentication but there's no token, redirect to login
+  if (requiresAuth && !token) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
 
-  if (isProtectedRoute) {
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    // Verify token
+  // If there's a token, verify it for protected routes
+  if (requiresAuth && token) {
     const payload = verifyToken(token)
     if (!payload) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
-      )
+      // Invalid token, redirect to login
+      return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
+  // Allow access for all other cases
   return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    '/api/cart/:path*',
-    '/api/auth/me',
-    '/profile/:path*',
-    '/dashboard/:path*'
-  ]
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 } 

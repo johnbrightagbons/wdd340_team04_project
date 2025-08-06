@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
+import { prisma } from './prisma'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
@@ -31,13 +32,13 @@ export function verifyToken(token: string): JWTPayload | null {
   }
 }
 
-export function getTokenFromCookies(): string | null {
-  const cookieStore = cookies()
+export async function getTokenFromCookies(): Promise<string | null> {
+  const cookieStore = await cookies()
   return cookieStore.get('auth-token')?.value || null
 }
 
-export function setTokenCookie(token: string): void {
-  const cookieStore = cookies()
+export async function setTokenCookie(token: string): Promise<void> {
+  const cookieStore = await cookies()
   cookieStore.set('auth-token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -51,8 +52,8 @@ export function removeTokenCookie(): void {
   cookieStore.delete('auth-token')
 }
 
-export function getCurrentUser(): JWTPayload | null {
-  const token = getTokenFromCookies()
+export async function getCurrentUser(): Promise<JWTPayload | null> {
+  const token = await getTokenFromCookies()
   if (!token) return null
   return verifyToken(token)
 } 

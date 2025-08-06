@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/app/lib/database'
-import User from '@/app/models/User'
+import { prisma } from '@/app/lib/prisma'
 import { getCurrentUser } from '@/app/lib/auth'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const currentUser = getCurrentUser()
+    const currentUser = await getCurrentUser()
     
     if (!currentUser) {
       return NextResponse.json(
@@ -14,10 +13,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    await connectDB()
-
     // Get user data from database
-    const user = await User.findById(currentUser.userId).select('-password')
+    const user = await prisma.user.findUnique({
+      where: { id: currentUser.userId },
+      include: {
+        artisanProfile: {
+          include: {
+            specialties: true
+          }
+        }
+      }
+    })
     
     if (!user) {
       return NextResponse.json(

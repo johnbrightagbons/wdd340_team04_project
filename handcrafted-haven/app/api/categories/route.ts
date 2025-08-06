@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/app/lib/database'
-import Category from '@/app/models/Category'
+import { prisma } from '@/app/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB()
-
     const { searchParams } = new URL(request.url)
     const featured = searchParams.get('featured')
 
-    // Build query
-    const query: any = {}
+    // Build where clause
+    const where: any = {}
     if (featured) {
-      query.featured = featured === 'true'
+      where.featured = featured === 'true'
     }
 
-    const categories = await Category.find(query)
-      .sort({ name: 1 })
-      .lean()
+    const categories = await prisma.category.findMany({
+      where,
+      orderBy: { name: 'asc' }
+    })
 
     return NextResponse.json({
       success: true,

@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/app/lib/database'
-import Product from '@/app/models/Product'
+import { prisma } from '@/app/lib/prisma'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectDB()
-
-    const product = await Product.findById(params.id).lean()
+    const product = await prisma.product.findUnique({
+      where: { id: params.id },
+      include: {
+        category: true,
+        artisan: true,
+        tags: true
+      }
+    })
 
     if (!product) {
       return NextResponse.json(

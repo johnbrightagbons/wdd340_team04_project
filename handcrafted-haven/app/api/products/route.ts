@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/app/lib/database'
-import Product from '@/app/models/Product'
+import { prisma } from '@/app/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB()
-
     const { searchParams } = new URL(request.url)
     
     // Pagination
@@ -25,38 +22,62 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'createdAt'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
-    // Build query
-    const query: any = {}
+    // Build where clause
+    const where: any = {}
 
-    if (category) query.category = category
-    if (artisan) query.artisanName = { $regex: artisan, $options: 'i' }
-    if (featured) query.featured = featured === 'true'
-    if (premium) query.premium = premium === 'true'
-    if (inStock) query.inStock = inStock === 'true'
+    if (category) {
+      where.category = { name: category }
+    }
+    
+    if (artisan) {
+      where.artisan = { name: { contains: artisan, mode: 'insensitive' } }
+    }
+    
+    if (featured) {
+      where.featured = featured === 'true'
+    }
+    
+    if (premium) {
+      where.premium = premium === 'true'
+    }
+    
+    if (inStock) {
+      where.inStock = inStock === 'true'
+    }
     
     if (minPrice || maxPrice) {
-      query.price = {}
-      if (minPrice) query.price.$gte = parseFloat(minPrice)
-      if (maxPrice) query.price.$lte = parseFloat(maxPrice)
+      where.price = {}
+      if (minPrice) where.price.gte = parseFloat(minPrice)
+      if (maxPrice) where.price.lte = parseFloat(maxPrice)
     }
 
     if (search) {
-      query.$text = { $search: search }
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ]
     }
 
-    // Build sort object
-    const sort: any = {}
-    sort[sortBy] = sortOrder === 'asc' ? 1 : -1
+    // Build orderBy
+    const orderBy: any = {}
+    orderBy[sortBy] = sortOrder
 
     // Execute query
-    const products = await Product.find(query)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean()
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: {
+          category: true,
+          artisan: true,
+          tags: true
+        }
+      }),
+      prisma.product.count({ where })
+    ])
 
-    // Get total count for pagination
-    const total = await Product.countDocuments(query)
     const totalPages = Math.ceil(total / limit)
 
     return NextResponse.json({

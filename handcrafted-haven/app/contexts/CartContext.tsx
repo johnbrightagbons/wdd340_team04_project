@@ -83,13 +83,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/cart')
       if (response.ok) {
         const data = await response.json()
-        setCart(data.data)
+        if (data.success && data.data) {
+          // Transform the API response to match our cart format
+          const transformedCart: Cart = {
+            items: data.data.items?.map((item: any) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              price: Number(item.price),
+              product: {
+                _id: item.product.id,
+                name: item.product.name,
+                price: Number(item.product.price),
+                imageUrl: item.product.imageUrl,
+                artisanName: item.product.artisan?.name || 'Unknown'
+              }
+            })) || [],
+            total: Number(data.data.total || 0),
+            itemCount: Number(data.data.itemCount || 0)
+          }
+          setCart(transformedCart)
+        } else {
+          setCart({ items: [], total: 0, itemCount: 0 })
+        }
       } else {
-        setCart(null)
+        console.error('Cart fetch failed:', response.status)
+        setCart({ items: [], total: 0, itemCount: 0 })
       }
     } catch (error) {
       console.error('Fetch cart error:', error)
-      setCart(null)
+      setCart({ items: [], total: 0, itemCount: 0 })
     } finally {
       setLoading(false)
     }
@@ -141,11 +163,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json()
 
-      if (data.success) {
-        setCart(data.data)
+      if (data.success && data.data) {
+        // Transform the API response to match our cart format
+        const transformedCart: Cart = {
+          items: data.data.items?.map((item: any) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: Number(item.price),
+            product: {
+              _id: item.product.id,
+              name: item.product.name,
+              price: Number(item.product.price),
+              imageUrl: item.product.imageUrl,
+              artisanName: item.product.artisan?.name || 'Unknown'
+            }
+          })) || [],
+          total: Number(data.data.total || 0),
+          itemCount: Number(data.data.itemCount || 0)
+        }
+        setCart(transformedCart)
         return { success: true, message: 'Item added to cart' }
       } else {
-        return { success: false, message: data.message }
+        return { success: false, message: data.message || 'Failed to add item to cart' }
       }
     } catch (error) {
       console.error('Add to cart error:', error)

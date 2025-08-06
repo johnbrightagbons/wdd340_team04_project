@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import connectDB from '@/app/lib/database'
-import User from '@/app/models/User'
+import { prisma } from '@/app/lib/prisma'
 import { comparePassword, generateToken, setTokenCookie } from '@/app/lib/auth'
 
 const loginSchema = z.object({
@@ -11,13 +10,21 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
-
     const body = await request.json()
     const validatedData = loginSchema.parse(body)
 
     // Find user by email
-    const user = await User.findOne({ email: validatedData.email })
+    const user = await prisma.user.findUnique({
+      where: { email: validatedData.email },
+      include: {
+        artisanProfile: {
+          include: {
+            specialties: true
+          }
+        }
+      }
+    })
+    
     if (!user) {
       return NextResponse.json(
         { success: false, message: 'Invalid credentials' },
@@ -36,23 +43,21 @@ export async function POST(request: NextRequest) {
 
     // Generate token
     const token = generateToken({
-      userId: user._id.toString(),
+      userId: user.id,
       email: user.email,
       isArtisan: user.isArtisan
     })
 
     // Set cookie
-    setTokenCookie(token)
+    await setTokenCookie(token)
 
     // Return user data (without password)
     const userResponse = {
-      id: user._id,
+      id: user.id,
       name: user.name,
       email: user.email,
       isArtisan: user.isArtisan,
-      profileImage: user.profileImage,
       artisanProfile: user.artisanProfile,
-      preferences: user.preferences,
       createdAt: user.createdAt
     }
 

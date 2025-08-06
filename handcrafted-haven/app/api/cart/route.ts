@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import connectDB from '@/app/lib/database'
-import Cart from '@/app/models/Cart'
-import Product from '@/app/models/Product'
+import { prisma } from '@/app/lib/prisma'
 import { getCurrentUser } from '@/app/lib/auth'
 
 const addToCartSchema = z.object({
@@ -18,7 +16,7 @@ const updateCartItemSchema = z.object({
 // GET - Get user's cart
 export async function GET(request: NextRequest) {
   try {
-    const currentUser = getCurrentUser()
+    const currentUser = await getCurrentUser()
     
     if (!currentUser) {
       return NextResponse.json(
@@ -27,20 +25,41 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    await connectDB()
-
-    let cart = await Cart.findOne({ userId: currentUser.userId })
-      .populate('items.productId', 'name price imageUrl artisanName')
+    let cart = await prisma.cart.findUnique({
+      where: { userId: currentUser.userId },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                artisan: true
+              }
+            }
+          }
+        }
+      }
+    })
 
     if (!cart) {
       // Create empty cart if it doesn't exist
-      cart = new Cart({
-        userId: currentUser.userId,
-        items: [],
-        total: 0,
-        itemCount: 0
+      cart = await prisma.cart.create({
+        data: {
+          userId: currentUser.userId,
+          total: 0,
+          itemCount: 0
+        },
+        include: {
+          items: {
+            include: {
+              product: {
+                include: {
+                  artisan: true
+                }
+              }
+            }
+          }
+        }
       })
-      await cart.save()
     }
 
     return NextResponse.json({
@@ -61,7 +80,7 @@ export async function GET(request: NextRequest) {
 // POST - Add item to cart
 export async function POST(request: NextRequest) {
   try {
-    const currentUser = getCurrentUser()
+    const currentUser = await getCurrentUser()
     
     if (!currentUser) {
       return NextResponse.json(
@@ -70,13 +89,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await connectDB()
-
     const body = await request.json()
     const validatedData = addToCartSchema.parse(body)
 
     // Verify product exists
-    const product = await Product.findById(validatedData.productId)
+    const product = await prisma.product.findUnique({
+      where: { id: validatedData.productId }
+    })
+    
     if (!product) {
       return NextResponse.json(
         { success: false, message: 'Product not found' },
@@ -92,43 +112,80 @@ export async function POST(request: NextRequest) {
     }
 
     // Get or create cart
-    let cart = await Cart.findOne({ userId: currentUser.userId })
+    let cart = await prisma.cart.findUnique({
+      where: { userId: currentUser.userId },
+      include: {
+        items: {
+          include: {
+            product: true
+          }
+        }
+      }
+    })
     
     if (!cart) {
-      cart = new Cart({
-        userId: currentUser.userId,
-        items: [],
-        total: 0,
-        itemCount: 0
+      cart = await prisma.cart.create({
+        data: {
+          userId: currentUser.userId,
+          total: 0,
+          itemCount: 0
+        },
+        include: {
+          items: {
+            include: {
+              product: true
+            }
+          }
+        }
       })
     }
 
     // Check if item already exists in cart
-    const existingItemIndex = cart.items.findIndex(
-      item => item.productId.toString() === validatedData.productId
+    const existingItem = cart.items.find(
+      item => item.productId === validatedData.productId
     )
 
-    if (existingItemIndex > -1) {
+    if (existingItem) {
       // Update quantity
-      cart.items[existingItemIndex].quantity += validatedData.quantity
+      await prisma.cartItem.update({
+        where: { id: existingItem.id },
+        data: { quantity: existingItem.quantity + validatedData.quantity }
+      })
     } else {
       // Add new item
-      cart.items.push({
-        productId: validatedData.productId,
-        quantity: validatedData.quantity,
-        price: product.price
+      await prisma.cartItem.create({
+        data: {
+          cartId: cart.id,
+          productId: validatedData.productId,
+          quantity: validatedData.quantity,
+          price: product.price
+        }
       })
     }
 
-    await cart.save()
+    // Update cart totals
+    await updateCartTotals(cart.id)
 
-    // Populate product details
-    await cart.populate('items.productId', 'name price imageUrl artisanName')
+    // Get updated cart
+    const updatedCart = await prisma.cart.findUnique({
+      where: { id: cart.id },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                artisan: true
+              }
+            }
+          }
+        }
+      }
+    })
 
     return NextResponse.json({
       success: true,
       message: 'Item added to cart',
-      data: cart
+      data: updatedCart
     })
 
   } catch (error) {
@@ -148,10 +205,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update cart item quantity
+// PUT - Update cart item
 export async function PUT(request: NextRequest) {
   try {
-    const currentUser = getCurrentUser()
+    const currentUser = await getCurrentUser()
     
     if (!currentUser) {
       return NextResponse.json(
@@ -160,12 +217,17 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    await connectDB()
-
     const body = await request.json()
     const validatedData = updateCartItemSchema.parse(body)
 
-    const cart = await Cart.findOne({ userId: currentUser.userId })
+    const cart = await prisma.cart.findUnique({
+      where: { userId: currentUser.userId },
+      include: {
+        items: {
+          where: { productId: validatedData.productId }
+        }
+      }
+    })
     
     if (!cart) {
       return NextResponse.json(
@@ -174,28 +236,43 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Find and update item
-    const itemIndex = cart.items.findIndex(
-      item => item.productId.toString() === validatedData.productId
-    )
-
-    if (itemIndex === -1) {
+    const item = cart.items[0]
+    if (!item) {
       return NextResponse.json(
         { success: false, message: 'Item not found in cart' },
         { status: 404 }
       )
     }
 
-    cart.items[itemIndex].quantity = validatedData.quantity
-    await cart.save()
+    // Update item quantity
+    await prisma.cartItem.update({
+      where: { id: item.id },
+      data: { quantity: validatedData.quantity }
+    })
 
-    // Populate product details
-    await cart.populate('items.productId', 'name price imageUrl artisanName')
+    // Update cart totals
+    await updateCartTotals(cart.id)
+
+    // Get updated cart
+    const updatedCart = await prisma.cart.findUnique({
+      where: { id: cart.id },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                artisan: true
+              }
+            }
+          }
+        }
+      }
+    })
 
     return NextResponse.json({
       success: true,
       message: 'Cart updated',
-      data: cart
+      data: updatedCart
     })
 
   } catch (error) {
@@ -218,7 +295,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Remove item from cart
 export async function DELETE(request: NextRequest) {
   try {
-    const currentUser = getCurrentUser()
+    const currentUser = await getCurrentUser()
     
     if (!currentUser) {
       return NextResponse.json(
@@ -226,8 +303,6 @@ export async function DELETE(request: NextRequest) {
         { status: 401 }
       )
     }
-
-    await connectDB()
 
     const { searchParams } = new URL(request.url)
     const productId = searchParams.get('productId')
@@ -239,7 +314,14 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const cart = await Cart.findOne({ userId: currentUser.userId })
+    const cart = await prisma.cart.findUnique({
+      where: { userId: currentUser.userId },
+      include: {
+        items: {
+          where: { productId }
+        }
+      }
+    })
     
     if (!cart) {
       return NextResponse.json(
@@ -249,19 +331,35 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Remove item from cart
-    cart.items = cart.items.filter(
-      item => item.productId.toString() !== productId
-    )
+    if (cart.items.length > 0) {
+      await prisma.cartItem.delete({
+        where: { id: cart.items[0].id }
+      })
+    }
 
-    await cart.save()
+    // Update cart totals
+    await updateCartTotals(cart.id)
 
-    // Populate product details
-    await cart.populate('items.productId', 'name price imageUrl artisanName')
+    // Get updated cart
+    const updatedCart = await prisma.cart.findUnique({
+      where: { id: cart.id },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                artisan: true
+              }
+            }
+          }
+        }
+      }
+    })
 
     return NextResponse.json({
       success: true,
       message: 'Item removed from cart',
-      data: cart
+      data: updatedCart
     })
 
   } catch (error) {
@@ -272,4 +370,23 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// Helper function to update cart totals
+async function updateCartTotals(cartId: string) {
+  const items = await prisma.cartItem.findMany({
+    where: { cartId },
+    include: { product: true }
+  })
+
+  const total = items.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0)
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+
+  await prisma.cart.update({
+    where: { id: cartId },
+    data: {
+      total,
+      itemCount
+    }
+  })
 } 

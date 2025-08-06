@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  isArtisan Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  artisanProfile ArtisanProfile?
+  products       Product[]
+  cart           Cart?
+
+  @@map("users")
+}
+
+model ArtisanProfile {
+  id          String   @id @default(cuid())
+  bio         String?
+  location    String?
+  verified    Boolean  @default(false)
+  rating      Decimal  @default(0) @db.Decimal(3, 2)
+  totalSales  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialties ArtisanSpecialty[]
+
+  @@map("artisan_profiles")
+}
+
+model ArtisanSpecialty {
+  id        String   @id @default(cuid())
+  specialty String
+  createdAt DateTime @default(now())
+
+  // Relations
+  artisanProfileId String         @map("artisan_profile_id")
+  artisanProfile   ArtisanProfile @relation(fields: [artisanProfileId], references: [id], onDelete: Cascade)
+
+  @@map("artisan_specialties")
+}
+
+model Category {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  icon         String?
+  description  String?
+  featured     Boolean  @default(false)
+  productCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  price         Decimal  @db.Decimal(10, 2)
+  originalPrice Decimal? @db.Decimal(10, 2)
+  description   String?
+  imageUrl      String?
+  featured      Boolean  @default(false)
+  premium       Boolean  @default(false)
+  rating        Decimal  @default(0) @db.Decimal(3, 2)
+  reviews       Int      @default(0)
+  inStock       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  artisanId  String
+  artisan    User     @relation(fields: [artisanId], references: [id])
+  tags       ProductTag[]
+  cartItems  CartItem[]
+
+  @@map("products")
+}
+
+model ProductTag {
+  id        String   @id @default(cuid())
+  tag       String
+  createdAt DateTime @default(now())
+
+  // Relations
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_tags")
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  total     Decimal  @default(0) @db.Decimal(10, 2)
+  itemCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items  CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  quantity  Int
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
+}
