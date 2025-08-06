@@ -3,7 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContext'
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Lock } from 'lucide-react'
 
 export default function CartPage() {
   const { user } = useAuth()
@@ -26,21 +26,6 @@ export default function CartPage() {
 
   const handleRemoveItem = async (productId: string) => {
     await removeFromCart(productId)
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5">
-        <div className="text-center">
-          <ShoppingBag className="w-16 h-16 text-secondary mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-primary mb-2">Sign in to view your cart</h2>
-          <p className="text-secondary mb-6">Please sign in to access your shopping cart</p>
-          <Link href="/login" className="btn-primary">
-            Sign In
-          </Link>
-        </div>
-      </div>
-    )
   }
 
   if (loading) {
@@ -176,9 +161,29 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <button className="w-full btn-primary mt-6">
-                  Proceed to Checkout
-                </button>
+                {user ? (
+                  <button className="w-full btn-primary mt-6">
+                    Proceed to Checkout
+                  </button>
+                ) : (
+                  <div className="mt-6 space-y-4">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 text-yellow-800">
+                        <Lock className="w-4 h-4" />
+                        <span className="font-medium">Login Required</span>
+                      </div>
+                      <p className="text-sm text-yellow-700 mt-2">
+                        Please sign in to complete your purchase. Your cart items will be saved.
+                      </p>
+                    </div>
+                    <Link href="/login" className="w-full btn-primary block text-center">
+                      Sign In to Checkout
+                    </Link>
+                    <Link href="/signup" className="w-full btn-secondary block text-center">
+                      Create Account
+                    </Link>
+                  </div>
+                )}
 
                 <div className="mt-4 text-center">
                   <Link href="/products" className="text-sm text-accent hover:text-accent/80 transition-colors">

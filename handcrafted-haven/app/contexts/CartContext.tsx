@@ -24,14 +24,46 @@ interface Cart {
 interface CartContextType {
   cart: Cart | null
   loading: boolean
-  addToCart: (productId: string, quantity: number) => Promise<{ success: boolean; message: string }>
+  addToCart: (productId: string, quantity: number, product: any) => Promise<{ success: boolean; message: string }>
   updateCartItem: (productId: string, quantity: number) => Promise<{ success: boolean; message: string }>
   removeFromCart: (productId: string) => Promise<{ success: boolean; message: string }>
   clearCart: () => Promise<void>
   refreshCart: () => Promise<void>
+  transferSessionCart: () => Promise<void>
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
+
+// Session storage keys
+const SESSION_CART_KEY = 'handcrafted-haven-cart'
+
+// Helper functions for session storage
+const getSessionCart = (): Cart => {
+  if (typeof window === 'undefined') return { items: [], total: 0, itemCount: 0 }
+  
+  try {
+    const stored = sessionStorage.getItem(SESSION_CART_KEY)
+    return stored ? JSON.parse(stored) : { items: [], total: 0, itemCount: 0 }
+  } catch {
+    return { items: [], total: 0, itemCount: 0 }
+  }
+}
+
+const setSessionCart = (cart: Cart): void => {
+  if (typeof window === 'undefined') return
+  sessionStorage.setItem(SESSION_CART_KEY, JSON.stringify(cart))
+}
+
+const clearSessionCart = (): void => {
+  if (typeof window === 'undefined') return
+  sessionStorage.removeItem(SESSION_CART_KEY)
+}
+
+const calculateCartTotals = (items: CartItem[]): { total: number; itemCount: number } => {
+  const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+  return { total, itemCount }
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null)
@@ -40,7 +72,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const fetchCart = async () => {
     if (!user) {
-      setCart(null)
+      // For non-logged-in users, use session storage
+      const sessionCart = getSessionCart()
+      setCart(sessionCart)
       setLoading(false)
       return
     }
@@ -61,11 +95,41 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const addToCart = async (productId: string, quantity: number) => {
+  const addToCart = async (productId: string, quantity: number, product: any) => {
     if (!user) {
-      return { success: false, message: 'Please login to add items to cart' }
+      // For non-logged-in users, use session storage
+      const sessionCart = getSessionCart()
+      const existingItemIndex = sessionCart.items.findIndex(
+        item => item.productId === productId
+      )
+
+      if (existingItemIndex > -1) {
+        sessionCart.items[existingItemIndex].quantity += quantity
+      } else {
+        sessionCart.items.push({
+          productId,
+          quantity,
+          price: product.price,
+          product: {
+            _id: product._id || productId,
+            name: product.name,
+            price: product.price,
+            imageUrl: product.imageUrl,
+            artisanName: product.artisanName
+          }
+        })
+      }
+
+      const { total, itemCount } = calculateCartTotals(sessionCart.items)
+      sessionCart.total = total
+      sessionCart.itemCount = itemCount
+
+      setSessionCart(sessionCart)
+      setCart(sessionCart)
+      return { success: true, message: 'Item added to cart' }
     }
 
+    // For logged-in users, use API
     try {
       const response = await fetch('/api/cart', {
         method: 'POST',
@@ -91,9 +155,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateCartItem = async (productId: string, quantity: number) => {
     if (!user) {
-      return { success: false, message: 'Please login to update cart' }
+      // For non-logged-in users, use session storage
+      const sessionCart = getSessionCart()
+      const itemIndex = sessionCart.items.findIndex(
+        item => item.productId === productId
+      )
+
+      if (itemIndex === -1) {
+        return { success: false, message: 'Item not found in cart' }
+      }
+
+      sessionCart.items[itemIndex].quantity = quantity
+      const { total, itemCount } = calculateCartTotals(sessionCart.items)
+      sessionCart.total = total
+      sessionCart.itemCount = itemCount
+
+      setSessionCart(sessionCart)
+      setCart(sessionCart)
+      return { success: true, message: 'Cart updated' }
     }
 
+    // For logged-in users, use API
     try {
       const response = await fetch('/api/cart', {
         method: 'PUT',
@@ -119,9 +201,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeFromCart = async (productId: string) => {
     if (!user) {
-      return { success: false, message: 'Please login to remove items from cart' }
+      // For non-logged-in users, use session storage
+      const sessionCart = getSessionCart()
+      sessionCart.items = sessionCart.items.filter(
+        item => item.productId !== productId
+      )
+
+      const { total, itemCount } = calculateCartTotals(sessionCart.items)
+      sessionCart.total = total
+      sessionCart.itemCount = itemCount
+
+      setSessionCart(sessionCart)
+      setCart(sessionCart)
+      return { success: true, message: 'Item removed from cart' }
     }
 
+    // For logged-in users, use API
     try {
       const response = await fetch(`/api/cart?productId=${productId}`, {
         method: 'DELETE',
@@ -142,10 +237,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const clearCart = async () => {
-    if (!user) return
+    if (!user) {
+      clearSessionCart()
+      setCart({ items: [], total: 0, itemCount: 0 })
+      return
+    }
 
     try {
-      // Remove all items one by one
+      // Remove all items one by one for logged-in users
       if (cart?.items) {
         for (const item of cart.items) {
           await removeFromCart(item.productId)
@@ -153,6 +252,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Clear cart error:', error)
+    }
+  }
+
+  const transferSessionCart = async () => {
+    if (!user) return
+
+    const sessionCart = getSessionCart()
+    if (sessionCart.items.length === 0) return
+
+    try {
+      // Transfer each item from session storage to database
+      for (const item of sessionCart.items) {
+        await fetch('/api/cart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            productId: item.productId, 
+            quantity: item.quantity 
+          }),
+        })
+      }
+
+      // Clear session storage after successful transfer
+      clearSessionCart()
+      
+      // Refresh cart to get updated data from database
+      await refreshCart()
+    } catch (error) {
+      console.error('Transfer session cart error:', error)
     }
   }
 
@@ -164,6 +294,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     fetchCart()
   }, [user])
 
+  // Transfer session cart when user logs in
+  useEffect(() => {
+    if (user) {
+      transferSessionCart()
+    }
+  }, [user])
+
   const value = {
     cart,
     loading,
@@ -172,6 +309,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     removeFromCart,
     clearCart,
     refreshCart,
+    transferSessionCart,
   }
 
   return (
