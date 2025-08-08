@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react'
 import { Search, Grid3X3, List, SlidersHorizontal } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
 import { featuredProducts, categories } from '../data/sampleData'
 
 export default function ProductsPage() {
@@ -43,167 +45,150 @@ export default function ProductsPage() {
   }, [allProducts, searchTerm, selectedCategory, sortBy, priceRange])
 
   return (
-    <div className="min-h-screen bg-primary">
-      <div className="bg-secondary border-b border-tertiary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Product Catalog</h1>
-          <p className="text-secondary">Discover unique handcrafted products made with love</p>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className={`lg:w-64 space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="card">
-              <h3 className="font-semibold text-primary mb-4">Filters</h3>
-              
-              <div className="mb-6">
-                <label htmlFor="search-input" className="block text-sm font-medium text-secondary mb-2">
-                  Search products
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted w-4 h-4" />
-                  <input
-                    id="search-input"
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-tertiary border border-tertiary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent text-primary"
-                  />
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label htmlFor="category-select" className="block text-sm font-medium text-secondary mb-2">
-                  Category
-                </label>
-                <select
-                  id="category-select"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-tertiary border border-tertiary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent text-primary"
-                >
-                  <option value="all">All categories</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.name}>
-                      {category.icon} {category.name} ({category.count})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-6">
-                <label htmlFor="price-range" className="block text-sm font-medium text-secondary mb-2">
-                  Price range
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="price-range"
-                    type="number"
-                    placeholder="Min"
-                    value={priceRange[0]}
-                    onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
-                    className="w-full px-3 py-2 bg-tertiary border border-tertiary rounded-lg text-sm text-primary"
-                  />
-                  <span className="text-muted">-</span>
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
-                    className="w-full px-3 py-2 bg-tertiary border border-tertiary rounded-lg text-sm text-primary"
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  setSearchTerm('')
-                  setSelectedCategory('all')
-                  setPriceRange([0, 500])
-                }}
-                className="w-full px-4 py-2 text-sm text-secondary border border-tertiary rounded-lg hover:bg-tertiary transition-colors"
-              >
-                Clear filters
-              </button>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5">
+      <Header />
+      
+      <main>
+        <div className="bg-secondary border-b border-tertiary">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h1 className="text-3xl font-bold text-primary mb-2">Product Catalog</h1>
+            <p className="text-secondary">Discover unique handcrafted products made with love</p>
           </div>
+        </div>
 
-          <div className="flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="lg:hidden flex items-center px-4 py-2 text-sm font-medium text-secondary bg-tertiary border border-tertiary rounded-lg hover:bg-hover-bg"
-                >
-                  <SlidersHorizontal className="w-4 h-4 mr-2" />
-                  Filters
-                </button>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            <div className={`lg:w-64 space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+              <div className="card">
+                <h3 className="font-semibold text-primary mb-4">Filters</h3>
                 
-                <div className="text-sm text-muted">
-                  {filteredProducts.length} products found
+                <div className="mb-6">
+                  <label htmlFor="search-input" className="block text-sm font-medium text-secondary mb-2">
+                    Search products
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted w-4 h-4" />
+                    <input
+                      id="search-input"
+                      type="text"
+                      placeholder="Search..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-tertiary border border-tertiary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent text-primary"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center space-x-4">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 text-sm bg-tertiary border border-tertiary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent text-primary"
+                <div className="mb-6">
+                  <label htmlFor="category-select" className="block text-sm font-medium text-secondary mb-2">
+                    Category
+                  </label>
+                  <select
+                    id="category-select"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full px-3 py-2 bg-tertiary border border-tertiary rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent text-primary"
+                  >
+                    <option value="all">All categories</option>
+                    {categories.map(category => (
+                      <option key={category.id} value={category.name}>
+                        {category.icon} {category.name} ({category.count})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-6">
+                  <label htmlFor="price-range" className="block text-sm font-medium text-secondary mb-2">
+                    Price range
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      value={priceRange[0]}
+                      onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
+                      className="w-20 px-2 py-1 bg-tertiary border border-tertiary rounded text-primary text-sm"
+                      placeholder="0"
+                    />
+                    <span className="text-secondary">-</span>
+                    <input
+                      type="number"
+                      value={priceRange[1]}
+                      onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                      className="w-20 px-2 py-1 bg-tertiary border border-tertiary rounded text-primary text-sm"
+                      placeholder="500"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setSearchTerm('')
+                    setSelectedCategory('all')
+                    setPriceRange([0, 500])
+                  }}
+                  className="w-full px-4 py-2 bg-secondary hover:bg-hover-bg text-primary rounded-lg transition-colors"
                 >
-                  <option value="name">Name A-Z</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="rating">Best Rating</option>
-                  <option value="newest">Newest</option>
-                </select>
+                  Clear filters
+                </button>
+              </div>
+            </div>
 
-                <div className="flex border border-tertiary rounded-lg">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <span className="text-secondary">{filteredProducts.length} products found</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-1 bg-tertiary border border-tertiary rounded text-primary text-sm"
+                  >
+                    <option value="name">Name A-Z</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="rating">Best Rating</option>
+                    <option value="newest">Newest</option>
+                  </select>
+                </div>
+                <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 ${viewMode === 'grid' ? 'bg-accent text-white' : 'text-muted hover:text-secondary'}`}
+                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-accent text-white' : 'bg-tertiary text-secondary'}`}
                   >
                     <Grid3X3 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 ${viewMode === 'list' ? 'bg-accent text-white' : 'text-muted hover:text-secondary'}`}
+                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-accent text-white' : 'bg-tertiary text-secondary'}`}
                   >
                     <List className="w-4 h-4" />
                   </button>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="lg:hidden p-2 bg-tertiary text-secondary rounded"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-            </div>
 
-            {filteredProducts.length > 0 ? (
-              <div className={`${
-                viewMode === 'grid' 
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                  : 'space-y-4'
-              }`}>
-                {filteredProducts.map(product => (
-                  <div key={product.id} className={viewMode === 'list' ? 'w-full' : ''}>
-                    <ProductCard product={product} />
-                  </div>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+                {filteredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-muted mb-4">
-                  <Search className="w-12 h-12 mx-auto" />
+
+              {filteredProducts.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-secondary text-lg">No products found matching your criteria.</p>
                 </div>
-                <h3 className="text-lg font-medium text-primary mb-2">
-                  No products found
-                </h3>
-                <p className="text-secondary">
-                  Try adjusting your search filters
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </main>
+      
+      <Footer />
     </div>
   )
 }

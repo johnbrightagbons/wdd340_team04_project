@@ -1,39 +1,104 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Star, Heart, ShoppingCart, Share2, Award, Crown, MessageCircle, Plus } from 'lucide-react'
 import ReviewForm from '../../components/ReviewForm'
 import ReviewList from '../../components/ReviewList'
-import { featuredProducts, sampleReviews } from '../../data/sampleData'
+import Header from '../../components/Header'
+import Footer from '../../components/Footer'
 import { Review } from '../../types'
+
+interface Product {
+  id: string
+  name: string
+  price: number
+  originalPrice?: number
+  description?: string
+  imageUrl?: string
+  featured?: boolean
+  premium?: boolean
+  rating?: number
+  reviews?: number
+  inStock?: boolean
+  tags?: any[]
+  category?: any
+  artisan?: any
+  createdAt?: string
+  updatedAt?: string
+}
 
 export default function ProductDetailPage() {
   const params = useParams()
   const productId = params.id as string
   
-  // En una aplicación real, esto vendría de una API
-  const product = featuredProducts.find(p => p.id === productId)
+  const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isFavorite, setIsFavorite] = useState(false)
   const [showReviewForm, setShowReviewForm] = useState(false)
-  const [reviews, setReviews] = useState<Review[]>(
-    sampleReviews.filter(review => review.productId === productId)
-  )
+  const [reviews, setReviews] = useState<Review[]>([])
 
-  if (!product) {
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`/api/products/${productId}`)
+        const data = await response.json()
+        
+        if (data.success) {
+          setProduct(data.data)
+        } else {
+          setError('Product not found')
+        }
+      } catch (error) {
+        setError('Failed to load product')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (productId) {
+      fetchProduct()
+    }
+  }, [productId])
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-primary flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-primary mb-2">Product not found</h1>
-          <p className="text-secondary">The product you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5">
+        <Header />
+        <div className="flex items-center justify-center flex-1 py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto"></div>
+            <p className="mt-4 text-secondary">Loading...</p>
+          </div>
         </div>
+        <Footer />
       </div>
     )
   }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5">
+        <Header />
+        <div className="flex items-center justify-center flex-1 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-primary mb-2">Product not found</h1>
+            <p className="text-secondary">The product you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  // Handle category and artisan data (could be string or object)
+  const categoryName = typeof product.category === 'string' ? product.category : product.category?.name || 'Unknown'
+  const artisanName = typeof product.artisan === 'string' ? product.artisan : product.artisan?.name || 'Unknown'
 
   // Imagen placeholder - en una app real vendría del producto
   const productImages = [
@@ -61,10 +126,11 @@ export default function ProductDetailPage() {
 
   const averageRating = reviews.length > 0 
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
-    : product.rating || 0
+    : (product.rating || 0)
 
   return (
     <div className="min-h-screen bg-primary">
+      <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="space-y-4">
@@ -124,7 +190,7 @@ export default function ProductDetailPage() {
 
             <div>
               <h1 className="text-3xl font-bold text-primary mb-2">{product.name}</h1>
-              <p className="text-secondary">By <span className="text-accent">{product.artisan}</span></p>
+              <p className="text-secondary">By <span className="text-accent">{artisanName}</span></p>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -133,7 +199,7 @@ export default function ProductDetailPage() {
                   <Star 
                     key={`star-${i}`} 
                     className={`w-4 h-4 ${
-                      i < Math.floor(averageRating) 
+                      i < Math.floor(Number(averageRating)) 
                         ? 'text-yellow-400 fill-current' 
                         : 'text-gray-300'
                     }`} 
@@ -141,7 +207,7 @@ export default function ProductDetailPage() {
                 ))}
               </div>
               <span className="text-sm text-secondary">
-                {averageRating.toFixed(1)} ({reviews.length} reviews)
+                {Number(averageRating).toFixed(1)} ({product.reviews || 0} reviews)
               </span>
             </div>
 
@@ -169,15 +235,15 @@ export default function ProductDetailPage() {
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <span className="text-secondary">Category:</span>
-                  <span className="text-primary">{product.category}</span>
+                  <span className="text-primary">{categoryName}</span>
                 </div>
-                {product.tags && (
+                {product.tags && product.tags.length > 0 && (
                   <div className="flex items-start space-x-2">
                     <span className="text-secondary">Tags:</span>
                     <div className="flex flex-wrap gap-1">
-                      {product.tags.map(tag => (
-                        <span key={tag} className="text-xs bg-tertiary text-secondary px-2 py-1 rounded-full">
-                          {tag}
+                      {product.tags.map((tag: any) => (
+                        <span key={tag.tag || tag} className="text-xs bg-tertiary text-secondary px-2 py-1 rounded-full">
+                          {tag.tag || tag}
                         </span>
                       ))}
                     </div>
@@ -266,6 +332,7 @@ export default function ProductDetailPage() {
           <ReviewList reviews={reviews} productId={productId} />
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

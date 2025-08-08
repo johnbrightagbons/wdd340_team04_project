@@ -62,7 +62,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
         {/* Item Count */}
         <div className="flex items-center justify-center">
           <span className="text-sm bg-tertiary text-secondary px-3 py-1 rounded-full border border-custom">
-            {category.count} items
+            {(category as any).productCount || category.count || 0} items
           </span>
         </div>
         
