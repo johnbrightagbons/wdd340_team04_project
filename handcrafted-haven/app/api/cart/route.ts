@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { prisma } from '@/app/lib/prisma'
 import { getCurrentUser } from '@/app/lib/auth'
 
+export const runtime = 'nodejs'
+
 const addToCartSchema = z.object({
   productId: z.string(),
   quantity: z.number().min(1, 'Quantity must be at least 1')
@@ -142,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     // Check if item already exists in cart
     const existingItem = cart.items.find(
-      item => item.productId === validatedData.productId
+      (item: any) => item.productId === validatedData.productId
     )
 
     if (existingItem) {
@@ -379,8 +381,8 @@ async function updateCartTotals(cartId: string) {
     include: { product: true }
   })
 
-  const total = items.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0)
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+  const total = items.reduce((sum: number, item: any) => sum + (Number(item.price) * item.quantity), 0)
+  const itemCount = items.reduce((sum: number, item: any) => sum + item.quantity, 0)
 
   await prisma.cart.update({
     where: { id: cartId },

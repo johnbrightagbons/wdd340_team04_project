@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { prisma } from '@/app/lib/prisma'
 import { comparePassword, generateToken, setTokenCookie } from '@/app/lib/auth'
 
+export const runtime = 'nodejs'
+
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required')

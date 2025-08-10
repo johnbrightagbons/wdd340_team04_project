@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 
+export const runtime = 'nodejs'
+
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const artisanId = params.id
+    const { id: artisanId } = await params
 
     const artisan = await prisma.user.findUnique({
       where: {
@@ -45,16 +47,16 @@ export async function GET(
       id: artisan.id,
       name: artisan.name,
       location: artisan.artisanProfile?.location || 'Unknown',
-      specialties: artisan.artisanProfile?.specialties.map(s => s.specialty) || [],
+      specialties: artisan.artisanProfile?.specialties.map((s: any) => s.specialty) || [],
       bio: artisan.artisanProfile?.bio || '',
-      image: artisan.artisanProfile?.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
       rating: Number(artisan.artisanProfile?.rating || 0),
       totalProducts: artisan._count.products,
       yearsExperience: Math.floor(Math.random() * 20) + 5, // Placeholder for now
       featured: artisan.artisanProfile?.verified || false,
       verified: artisan.artisanProfile?.verified || false,
       totalSales: artisan.artisanProfile?.totalSales || 0,
-      products: artisan.products.map(product => ({
+      products: artisan.products.map((product: any) => ({
         id: product.id,
         name: product.name,
         price: Number(product.price),
@@ -67,7 +69,7 @@ export async function GET(
         reviews: product.reviews,
         inStock: product.inStock,
         category: product.category,
-        tags: product.tags.map(tag => tag.tag),
+        tags: product.tags.map((tag: any) => tag.tag),
         createdAt: product.createdAt,
         updatedAt: product.updatedAt
       }))

@@ -47,8 +47,8 @@ export async function setTokenCookie(token: string): Promise<void> {
   })
 }
 
-export function removeTokenCookie(): void {
-  const cookieStore = cookies()
+export async function removeTokenCookie(): Promise<void> {
+  const cookieStore = await cookies()
   cookieStore.delete('auth-token')
 }
 

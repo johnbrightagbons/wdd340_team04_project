@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/app/lib/prisma'
 
+export const runtime = 'nodejs'
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -60,13 +62,13 @@ export async function GET(request: Request) {
     })
 
     // Transform the data to match the frontend expectations
-    const transformedArtisans = artisans.map(artisan => ({
+    const transformedArtisans = artisans.map((artisan: any) => ({
       id: artisan.id,
       name: artisan.name,
       location: artisan.artisanProfile?.location || 'Unknown',
-      specialties: artisan.artisanProfile?.specialties.map(s => s.specialty) || [],
+      specialties: artisan.artisanProfile?.specialties.map((s: any) => s.specialty) || [],
       bio: artisan.artisanProfile?.bio || '',
-      image: artisan.artisanProfile?.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
       rating: Number(artisan.artisanProfile?.rating || 0),
       totalProducts: artisan._count.products,
       yearsExperience: Math.floor(Math.random() * 20) + 5, // Placeholder for now

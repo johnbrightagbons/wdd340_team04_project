@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import { removeTokenCookie } from '@/app/lib/auth'
 
+export const runtime = 'nodejs'
+
 export async function POST() {
   try {
     // Remove authentication cookie
-    removeTokenCookie()
+    await removeTokenCookie()
 
     return NextResponse.json({
       success: true,

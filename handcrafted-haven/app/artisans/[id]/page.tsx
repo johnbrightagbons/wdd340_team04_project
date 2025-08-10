@@ -6,9 +6,9 @@ import ProductCard from '@/app/components/ProductCard'
 import { MapPin, Star, Award, Mail, Globe, Instagram } from 'lucide-react'
 
 interface ArtisanDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 async function getArtisan(id: string) {
@@ -46,16 +46,16 @@ async function getArtisan(id: string) {
       id: artisan.id,
       name: artisan.name,
       location: artisan.artisanProfile?.location || 'Unknown',
-      specialties: artisan.artisanProfile?.specialties.map(s => s.specialty) || [],
+      specialties: artisan.artisanProfile?.specialties.map((s: any) => s.specialty) || [],
       bio: artisan.artisanProfile?.bio || '',
-      image: artisan.artisanProfile?.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
       rating: Number(artisan.artisanProfile?.rating || 0),
       totalProducts: artisan._count.products,
       yearsExperience: Math.floor(Math.random() * 20) + 5, // Placeholder for now
       featured: artisan.artisanProfile?.verified || false,
       verified: artisan.artisanProfile?.verified || false,
       totalSales: artisan.artisanProfile?.totalSales || 0,
-      products: artisan.products.map(product => ({
+      products: artisan.products.map((product: any) => ({
         id: product.id,
         name: product.name,
         price: Number(product.price),
@@ -72,7 +72,7 @@ async function getArtisan(id: string) {
           id: artisan.id,
           name: artisan.name
         },
-        tags: product.tags.map(tag => tag.tag),
+        tags: product.tags.map((tag: any) => tag.tag),
         createdAt: product.createdAt,
         updatedAt: product.updatedAt
       }))
@@ -84,7 +84,8 @@ async function getArtisan(id: string) {
 }
 
 export default async function ArtisanDetailPage({ params }: ArtisanDetailPageProps) {
-  const artisan = await getArtisan(params.id)
+  const { id } = await params
+  const artisan = await getArtisan(id)
 
   if (!artisan) {
     notFound()
@@ -150,7 +151,7 @@ export default async function ArtisanDetailPage({ params }: ArtisanDetailPagePro
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-primary mb-3">Specialties</h3>
                 <div className="flex flex-wrap gap-2">
-                  {artisan.specialties.map((specialty, index) => (
+                  {artisan.specialties.map((specialty: string, index: number) => (
                     <span
                       key={index}
                       className="bg-accent/20 text-accent px-4 py-2 rounded-full text-sm font-medium"
@@ -194,7 +195,7 @@ export default async function ArtisanDetailPage({ params }: ArtisanDetailPagePro
           
           {artisan.products.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {artisan.products.map((product) => (
+              {artisan.products.map((product: any) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

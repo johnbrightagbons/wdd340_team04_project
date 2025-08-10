@@ -47,7 +47,7 @@ export default async function CategoriesPage() {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {categories.map((category) => (
+          {categories.map((category: any) => (
             <div key={category.id} className="bg-tertiary rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 border border-custom">
               {/* Category Header */}
               <div className="flex items-center justify-between mb-4">
@@ -78,7 +78,7 @@ export default async function CategoriesPage() {
                 <div className="mb-6">
                   <h4 className="text-sm font-semibold text-primary mb-3">Sample Products</h4>
                   <div className="space-y-2">
-                    {category.products.map((product) => (
+                    {category.products.map((product: any) => (
                       <div key={product.id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
                         <div className="flex items-center space-x-3">
                           {product.imageUrl && (
@@ -151,19 +151,19 @@ export default async function CategoriesPage() {
               </div>
               <div className="bg-tertiary rounded-lg p-6">
                 <div className="text-3xl font-bold text-accent">
-                  {categories.reduce((total, cat) => total + cat._count.products, 0)}
+                  {categories.reduce((total: number, cat: any) => total + cat._count.products, 0)}
                 </div>
                 <div className="text-secondary">Total Products</div>
               </div>
               <div className="bg-tertiary rounded-lg p-6">
                 <div className="text-3xl font-bold text-accent">
-                  {categories.filter(cat => cat.featured).length}
+                  {categories.filter((cat: any) => cat.featured).length}
                 </div>
                 <div className="text-secondary">Featured Categories</div>
               </div>
               <div className="bg-tertiary rounded-lg p-6">
                 <div className="text-3xl font-bold text-accent">
-                  {Math.max(...categories.map(cat => cat._count.products))}
+                  {Math.max(...categories.map((cat: any) => cat._count.products))}
                 </div>
                 <div className="text-secondary">Most Products</div>
               </div>
